@@ -68,7 +68,7 @@ export default function App() {
   const [currentSequenceIndex, setCurrentSequenceIndex] = useState(0);
 
   // Layout states for VisionCut Pro professional workspace resizing and docking
-  const [layoutMode, setLayoutMode] = useState<'EDITING' | 'COLOR' | 'AUDIO' | 'MOTION GRAPHICS' | 'FULLSCREEN EDITOR'>('EDITING');
+  const [layoutMode, setLayoutMode] = useState<'EDITING' | 'COLOR' | 'AUDIO' | 'MOTION' | 'IA_STUDIO' | 'MULTICAM' | 'STREAMING' | 'CINEMA'>('EDITING');
   const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
   const [sidebarState, setSidebarState] = useState<'normal' | 'collapsed' | 'detached' | 'fullscreen'>('normal');
   const [sidebarActiveTab, setSidebarActiveTab] = useState<'media' | 'effects' | 'text' | 'marketplace' | 'templates'>('media');
@@ -94,6 +94,7 @@ export default function App() {
 
   const [monitorTabOverride, setMonitorTabOverride] = useState<'program' | 'source' | 'grading' | 'scopes' | undefined>(undefined);
   const [dualMonitorActive, setDualMonitorActive] = useState<boolean>(false);
+  const [aiInspectorTabOverride, setAiInspectorTabOverride] = useState<'transformacao' | 'cor' | 'audio' | 'texto' | 'motion' | 'ai' | undefined>(undefined);
 
   // DRAGGING EVENT HANDLERS
   const startDraggingPanel = (e: React.MouseEvent, panelName: 'sidebar' | 'ai' | 'mixer') => {
@@ -160,39 +161,67 @@ export default function App() {
   }, [resizing]);
 
   // PROFESSIONAL LAYOUT SWITCHER
-  const handleSwitchLayoutMode = (mode: 'EDITING' | 'COLOR' | 'AUDIO' | 'MOTION GRAPHICS' | 'FULLSCREEN EDITOR') => {
+  const handleSwitchLayoutMode = (mode: 'EDITING' | 'COLOR' | 'AUDIO' | 'MOTION' | 'IA_STUDIO' | 'MULTICAM' | 'STREAMING' | 'CINEMA') => {
     setLayoutMode(mode);
     setIsFocusMode(false);
     
     if (mode === 'EDITING') {
       setSidebarState('normal');
       setSidebarActiveTab('media');
-      setAiInspectorState('collapsed');
+      setAiInspectorState('normal');
       setAudioMixerState('collapsed');
       setMonitorTabOverride('program');
       setDualMonitorActive(false);
+      setAiInspectorTabOverride('transformacao');
     } else if (mode === 'COLOR') {
       setSidebarState('collapsed');
       setSidebarActiveTab('media');
-      setAiInspectorState('collapsed');
+      setAiInspectorState('normal');
       setAudioMixerState('collapsed');
       setMonitorTabOverride('grading');
       setDualMonitorActive(false);
+      setAiInspectorTabOverride('cor');
     } else if (mode === 'AUDIO') {
       setSidebarState('collapsed');
       setSidebarActiveTab('media');
-      setAiInspectorState('collapsed');
+      setAiInspectorState('normal');
       setAudioMixerState('normal');
-      setMonitorTabOverride('program');
-      setDualMonitorActive(true); // Let audio mode display dual monitor side-by-side
-    } else if (mode === 'MOTION GRAPHICS') {
+      setMonitorTabOverride('scopes');
+      setDualMonitorActive(false);
+      setAiInspectorTabOverride('audio');
+    } else if (mode === 'MOTION') {
       setSidebarState('normal');
       setSidebarActiveTab('effects');
       setAiInspectorState('normal');
       setAudioMixerState('collapsed');
       setMonitorTabOverride('program');
       setDualMonitorActive(false);
-    } else if (mode === 'FULLSCREEN EDITOR') {
+      setAiInspectorTabOverride('motion');
+    } else if (mode === 'IA_STUDIO') {
+      setSidebarState('normal');
+      setSidebarActiveTab('media');
+      setAiInspectorState('normal');
+      setAudioMixerState('collapsed');
+      setMonitorTabOverride('program');
+      setDualMonitorActive(false);
+      setAiInspectorTabOverride('ai');
+    } else if (mode === 'MULTICAM') {
+      setSidebarState('collapsed');
+      setSidebarActiveTab('media');
+      setAiInspectorState('collapsed');
+      setAudioMixerState('collapsed');
+      setMonitorTabOverride('source');
+      setDualMonitorActive(true);
+      setAiInspectorTabOverride('transformacao');
+    } else if (mode === 'STREAMING') {
+      setSidebarState('collapsed');
+      setSidebarActiveTab('media');
+      setAiInspectorState('normal');
+      setAudioMixerState('normal');
+      setMonitorTabOverride('scopes');
+      setDualMonitorActive(false);
+      setAiInspectorTabOverride('audio');
+    } else if (mode === 'CINEMA') {
       setSidebarState('collapsed');
       setSidebarActiveTab('media');
       setAiInspectorState('collapsed');
@@ -200,6 +229,7 @@ export default function App() {
       setMonitorTabOverride('program');
       setDualMonitorActive(false);
       setIsFocusMode(true);
+      setAiInspectorTabOverride('transformacao');
     }
   };
 
@@ -961,6 +991,51 @@ export default function App() {
         </div>
       </header>
 
+      {workspaceMode === 'editor' && (
+        <div className="h-7 bg-neutral-900 border-b border-neutral-950 flex items-center justify-between px-3 select-none text-[10px] shrink-0 z-20">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+            <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-wider mr-2 font-mono shrink-0">Workspaces:</span>
+            {[
+              { id: 'EDITING', label: 'Edição', icon: '🎬' },
+              { id: 'COLOR', label: 'Color DaVinci', icon: '🎨' },
+              { id: 'AUDIO', label: 'Áudio (Mixer)', icon: '🎚️' },
+              { id: 'MOTION', label: 'Motion Graphics', icon: '✨' },
+              { id: 'IA_STUDIO', label: 'IA Studio', icon: '🧙‍♂️' },
+              { id: 'MULTICAM', label: 'Multicam (Dual)', icon: '🎞️' },
+              { id: 'STREAMING', label: 'Streaming', icon: '📡' },
+              { id: 'CINEMA', label: 'Cinema (Preto)', icon: '🍿' }
+            ].map(ws => (
+              <button
+                key={ws.id}
+                onClick={() => handleSwitchLayoutMode(ws.id as any)}
+                className={`px-2.5 py-0.5 rounded font-bold uppercase tracking-wider text-[9px] flex items-center gap-1.5 transition shrink-0 ${layoutMode === ws.id ? 'bg-neutral-800 text-teal-400 border border-teal-500/15' : 'text-neutral-500 hover:text-neutral-300'}`}
+              >
+                <span>{ws.icon}</span>
+                <span>{ws.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => {
+                setSidebarState('normal');
+                setAiInspectorState('normal');
+                setAudioMixerState('collapsed');
+                setDualMonitorActive(false);
+                setIsFocusMode(false);
+                setLayoutMode('EDITING');
+                setAiInspectorTabOverride('transformacao');
+                setMonitorTabOverride('program');
+              }}
+              className="px-2 py-0.5 bg-neutral-950 hover:bg-neutral-850 hover:text-teal-400 text-neutral-500 border border-neutral-850 rounded text-[9px] font-mono font-bold transition"
+              title="Resetar painéis para layout padrão de fábrica"
+            >
+              🔄 RESET DE FÁBRICA
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 2. CORE WORKSPACE */}
       <main className="flex-1 min-h-0 relative">
         {workspaceMode === 'dashboard' ? (
@@ -1148,6 +1223,7 @@ export default function App() {
                       onUpdateColorGrading={handleUpdateColorGrading}
                       onUpdateMotion={handleUpdateMotion}
                       onUpdateAudioSettings={handleUpdateAudioSettings}
+                      activeTabOverride={aiInspectorTabOverride}
                     />
                   </div>
                 </div>
@@ -1316,6 +1392,7 @@ export default function App() {
                     onUpdateColorGrading={handleUpdateColorGrading}
                     onUpdateMotion={handleUpdateMotion}
                     onUpdateAudioSettings={handleUpdateAudioSettings}
+                    activeTabOverride={aiInspectorTabOverride}
                   />
                 </div>
               </div>
@@ -1333,56 +1410,56 @@ export default function App() {
             onClick={() => handleSwitchLayoutMode('EDITING')}
             className={`px-3.5 h-full border-t-2 flex items-center transition ${layoutMode === 'EDITING' ? 'border-teal-400 text-teal-400 bg-neutral-900/40 font-bold' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
           >
-            Linha do Tempo
+            🎬 Edição
           </button>
           
-          <button 
-            onClick={() => { handleSwitchLayoutMode('EDITING'); setSidebarState('normal'); setSidebarActiveTab('media'); }}
-            className="px-3.5 h-full border-t-2 border-transparent text-neutral-500 hover:text-neutral-300 flex items-center transition"
-          >
-            Editar
-          </button>
-
           <button 
             onClick={() => handleSwitchLayoutMode('COLOR')}
             className={`px-3.5 h-full border-t-2 flex items-center transition ${layoutMode === 'COLOR' ? 'border-teal-400 text-teal-400 bg-neutral-900/40 font-bold' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
           >
-            Cor
+            🎨 Cor (DaVinci)
           </button>
 
           <button 
-            onClick={() => handleSwitchLayoutMode('MOTION GRAPHICS')}
-            className={`px-3.5 h-full border-t-2 flex items-center transition ${layoutMode === 'MOTION GRAPHICS' ? 'border-teal-400 text-teal-400 bg-neutral-900/40 font-bold' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
+            onClick={() => handleSwitchLayoutMode('MOTION')}
+            className={`px-3.5 h-full border-t-2 flex items-center transition ${layoutMode === 'MOTION' ? 'border-teal-400 text-teal-400 bg-neutral-900/40 font-bold' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
           >
-            Efeitos
+            ✨ Motion Graphics
           </button>
 
           <button 
             onClick={() => handleSwitchLayoutMode('AUDIO')}
-            className={`px-3.5 h-full border-t-2 flex items-center transition ${layoutMode === 'AUDIO' ? 'border-teal-400 text-teal-400 bg-neutral-900/40 font-bold' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
+            className={`px-3.5 h-full border-t-2 flex items-center transition ${layoutMode === 'AUDIO' ? 'border-teal-400 text-teal-400 bg-neutral-900/40 font-bold' : 'border-transparent text-neutral-400 hover:text-neutral-200'}`}
           >
-            Áudio
+            🎚️ Mixer de Áudio
           </button>
 
           <button 
-            onClick={() => { handleSwitchLayoutMode('MOTION GRAPHICS'); setSidebarActiveTab('text'); }}
-            className="px-3.5 h-full border-t-2 border-transparent text-neutral-500 hover:text-neutral-300 flex items-center transition"
+            onClick={() => handleSwitchLayoutMode('IA_STUDIO')}
+            className={`px-3.5 h-full border-t-2 flex items-center transition ${layoutMode === 'IA_STUDIO' ? 'border-teal-400 text-teal-400 bg-neutral-900/40 font-bold' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
           >
-            Gráficos
+            🧙‍♂️ IA Studio
           </button>
 
           <button 
-            onClick={() => { setSidebarState('normal'); setSidebarActiveTab('media'); }}
-            className="px-3.5 h-full border-t-2 border-transparent text-neutral-500 hover:text-neutral-300 flex items-center transition"
+            onClick={() => handleSwitchLayoutMode('MULTICAM')}
+            className={`px-3.5 h-full border-t-2 flex items-center transition ${layoutMode === 'MULTICAM' ? 'border-teal-400 text-teal-400 bg-neutral-900/40 font-bold' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
           >
-            Bibliotecas
+            🎞️ Multicam (Dual)
           </button>
 
           <button 
-            onClick={() => { setAiInspectorState('normal'); }}
-            className="px-3.5 h-full border-t-2 border-transparent text-neutral-500 hover:text-neutral-300 flex items-center transition"
+            onClick={() => handleSwitchLayoutMode('STREAMING')}
+            className={`px-3.5 h-full border-t-2 flex items-center transition ${layoutMode === 'STREAMING' ? 'border-teal-400 text-teal-400 bg-neutral-900/40 font-bold' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
           >
-            IA Studio
+            📡 Streaming
+          </button>
+
+          <button 
+            onClick={() => handleSwitchLayoutMode('CINEMA')}
+            className={`px-3.5 h-full border-t-2 flex items-center transition ${layoutMode === 'CINEMA' ? 'border-teal-400 text-teal-400 bg-neutral-900/40 font-bold' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
+          >
+            🍿 Cinema
           </button>
         </div>
 

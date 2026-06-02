@@ -76,6 +76,12 @@ export default function Monitor({
   const [safeArea, setSafeArea] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [scalingMode, setScalingMode] = useState<'fit' | 'fill'>('fit');
+
+  // Video Engineering Overlays
+  const [zebraExposure, setZebraExposure] = useState<boolean>(false);
+  const [focusPeaking, setFocusPeaking] = useState<boolean>(false);
+  const [pixelGrid, setPixelGrid] = useState<boolean>(false);
+  const [hdrPreview, setHdrPreview] = useState<boolean>(false);
   
   // Custom workspace and premium options
   const [dualMonitor, setDualMonitor] = useState<boolean>(forcedDualMonitor);
@@ -169,8 +175,11 @@ export default function Monitor({
   const getFilterStyle = (clip: Clip) => {
     if (!clip.filters) return {};
     const f = clip.filters;
+    const brightnessVal = hdrPreview ? f.brightness * 1.35 : f.brightness;
+    const contrastVal = hdrPreview ? f.contrast * 1.25 : f.contrast;
+    const saturateVal = hdrPreview ? f.saturate * 1.45 : f.saturate;
     return {
-      filter: `brightness(${f.brightness}%) contrast(${f.contrast}%) saturate(${f.saturate}%) blur(${f.blur}px) hue-rotate(${f.hueRotate}deg) grayscale(${f.grayscale}%) sepia(${f.sepia}%) invert(${f.invert}%)`,
+      filter: `brightness(${brightnessVal}%) contrast(${contrastVal}%) saturate(${saturateVal}%) blur(${f.blur}px) hue-rotate(${f.hueRotate}deg) grayscale(${f.grayscale}%) sepia(${f.sepia}%) invert(${f.invert}%)`,
     };
   };
 
@@ -724,6 +733,37 @@ export default function Monitor({
                   </div>
                 )}
 
+                {zebraExposure && (
+                  <div 
+                    className="absolute inset-0 pointer-events-none z-35 mix-blend-difference opacity-50"
+                    style={{
+                      background: 'repeating-linear-gradient(45deg, rgba(234, 179, 8, 0.4) 0px, rgba(234, 179, 8, 0.4) 10px, transparent 10px, transparent 20px)'
+                    }}
+                  />
+                )}
+
+                {focusPeaking && (
+                  <div className="absolute inset-0 pointer-events-none z-35 mix-blend-screen opacity-70">
+                    <svg className="w-full h-full">
+                      <path d="M 50 120 Q 150 40 250 120 T 350 120" fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeDasharray="3 4" />
+                      <path d="M 10 200 L 400 200" fill="none" stroke="#22d3ee" strokeWidth="1" strokeDasharray="2 3" />
+                      <circle cx="150" cy="80" r="1.5" fill="#22d3ee" />
+                      <circle cx="210" cy="110" r="2" fill="#22d3ee" />
+                      <circle cx="80" cy="140" r="1" fill="#22d3ee" />
+                    </svg>
+                  </div>
+                )}
+
+                {pixelGrid && (
+                  <div 
+                    className="absolute inset-0 pointer-events-none z-35 opacity-25 mix-blend-overlay"
+                    style={{
+                      backgroundImage: 'radial-gradient(#ffffff 0.5px, transparent 0.5px)',
+                      backgroundSize: '3px 3px'
+                    }}
+                  />
+                )}
+
                 {/* cinematic letterbox crop preset simulation */}
                 <div className="absolute top-0 left-0 right-0 h-4 bg-black pointer-events-none opacity-80 z-20"></div>
                 <div className="absolute bottom-0 left-0 right-0 h-4 bg-black pointer-events-none opacity-80 z-20"></div>
@@ -731,22 +771,52 @@ export default function Monitor({
             </div>
 
             {/* Quick overlay options */}
-            <div className="bg-neutral-950 px-4 py-2 border-t border-neutral-900 flex items-center justify-between">
-              <span className="text-[10px] text-neutral-500 uppercase font-mono tracking-wider flex items-center gap-1">
+            <div className="bg-neutral-950 px-4 py-2 border-t border-neutral-900 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-[10px] text-neutral-550 uppercase font-mono tracking-wider flex items-center gap-1">
                 <Cpu className="w-3.5 h-3.5 text-teal-400 animate-spin" /> Render Cache: 100% (Acel. GPU)
               </span>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 <button
                   onClick={() => setShowGrid(!showGrid)}
-                  className={`px-2 py-1 text-[9px] font-bold rounded flex items-center gap-1 transition ${showGrid ? 'bg-teal-500/10 text-teal-400 border border-teal-500/25' : 'text-neutral-500'}`}
+                  className={`px-2 py-1 text-[9px] font-bold rounded border transition ${showGrid ? 'bg-teal-500/10 text-teal-400 border-teal-500/25' : 'text-neutral-500 border-transparent hover:text-neutral-300'}`}
+                  title="Superpor Grade Grid de Terços para Regra dos Terços"
                 >
                   <Grid className="w-3 h-3" /> GRADE de TERÇOS
                 </button>
                 <button
                   onClick={() => setSafeArea(!safeArea)}
-                  className={`px-2 py-1 text-[9px] font-bold rounded flex items-center gap-1 transition ${safeArea ? 'bg-teal-500/10 text-teal-400 border border-teal-500/25' : 'text-neutral-500'}`}
+                  className={`px-2 py-1 text-[9px] font-bold rounded border transition ${safeArea ? 'bg-teal-500/10 text-teal-400 border-teal-500/25' : 'text-neutral-500 border-transparent hover:text-neutral-300'}`}
+                  title="Margens de segurança Action Safe / Title Safe"
                 >
                   <Maximize className="w-3 h-3" /> MARGENS SEGURAS
+                </button>
+                <button
+                  onClick={() => setZebraExposure(!zebraExposure)}
+                  className={`px-2 py-1 text-[9px] font-bold rounded border transition ${zebraExposure ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/25 animate-pulse' : 'text-neutral-500 border-transparent hover:text-neutral-300'}`}
+                  title="Ativar listras Zebra para áreas de superexposição"
+                >
+                  🦓 ZEBRA 70IRE
+                </button>
+                <button
+                  onClick={() => setFocusPeaking(!focusPeaking)}
+                  className={`px-2 py-1 text-[9px] font-bold rounded border transition ${focusPeaking ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/25 font-extrabold' : 'text-neutral-500 border-transparent hover:text-neutral-300'}`}
+                  title="Ativar contornos Focus Peaking para nitidez de foco"
+                >
+                  🎯 PEAKING FOCO
+                </button>
+                <button
+                  onClick={() => setPixelGrid(!pixelGrid)}
+                  className={`px-2 py-1 text-[9px] font-bold rounded border transition ${pixelGrid ? 'bg-indigo-505 bg-indigo-500/10 text-indigo-400 border-indigo-500/25' : 'text-neutral-500 border-transparent hover:text-neutral-300'}`}
+                  title="Ativar visualizador de malha de sub-pixels"
+                >
+                  📺 PIXEL GRID
+                </button>
+                <button
+                  onClick={() => setHdrPreview(!hdrPreview)}
+                  className={`px-2 py-1 text-[9px] font-bold rounded border transition ${hdrPreview ? 'bg-orange-550/15 bg-orange-500/15 text-orange-400 border-orange-500/30' : 'text-neutral-500 border-transparent hover:text-neutral-300'}`}
+                  title="Ativar preview HDR simulado (Contraste e saturação expandidos)"
+                >
+                  🔥 HDR PREVIEW
                 </button>
               </div>
             </div>
